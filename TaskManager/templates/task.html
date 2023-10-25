@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block container %}
+<div class="container">
+    <h1 class="my-4">My Task List</h1>
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Sr.No.</th>
+                <th>Task</th>
+                <th>Task Description</th>
+                <th>CreatedAt/UpdatedAt</th>
+                <th>Action</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for t in task %}
+            <tr>
+                <td>{{forloop.counter}}</td>
+                <td>{{t.task}}</td>
+                <td>{{t.task_desc}}</td>
+                <td>{{t.created_at}}/{{t.updated_at}}</td>
+                <td id="item_links">
+                    <button class="btn btn-light"><a href="{% url 'update_task' t.id %}"> Update Task</a><br>
+                    {% comment %} <a href="{% url 'delete_task' t.id %}"> Delete {% endcomment %}
+                    <button class="delete-task btn btn-danger" data-task-id="{{ t.id }}">Delete</button>
+
+                </td>
+                {% if t.status == "Complete" %}
+                 <td><span class="badge badge-success p-2">Completed</span></td>
+                {% else %}
+                 <td><span class="badge badge-danger p-2">Pending</span></td>
+
+                {% endif %}
+            </tr>
+            {% endfor %}
+            
+        
+        </tbody>
+    </table>
+    <div class="container mt-5">
+        <a href="{% url 'add_task' %}"><button class="btn btn-primary">Add Task</button></a>
+        <a href="{% url 'logout' %}"><button class="btn btn-primary">Logout</button></a>
+    </div>
+</div>
+<script>
+ const csrf_token = "{{ csrf_token|escapejs }}";
+ function updateSerialNumbers() {
+    const taskRows = document.querySelectorAll('table tbody tr');
+    taskRows.forEach((row, index) => {
+        row.querySelector('td:first-child').textContent = index + 1;
+    });
+}
+ </script>
+<script>
+document.querySelectorAll('.delete-task').forEach(button => {
+    button.addEventListener('click', function () {
+        const taskId = this.getAttribute('data-task-id');
+        const taskRow = this.closest('tr');
+        if (confirm('Are you sure you want to delete this task?')) {
+            fetch("{% url 'delete_task' 0 %}".replace('0', taskId), {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': csrf_token,  // Include the CSRF token
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Handle the response (e.g., remove the task from the DOM)
+                if (data.message === 'deleted') {
+                    taskRow.remove();
+                    updateSerialNumbers();  // Remove the task from the list
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    });
+});
+
+</script>
+
+{% endblock container %}

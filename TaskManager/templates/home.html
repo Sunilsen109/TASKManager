@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+{% extends "base.html" %}
+{% block container %}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="login-tab" data-toggle="tab" href="#login" role="tab" aria-controls="login" aria-selected="true">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="signup-tab" data-toggle="tab" href="#signup" role="tab" aria-controls="signup" aria-selected="false">Sign-up</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="login" role="tabpanel" aria-labelledby="login-tab">
+                            <form id="login-form" >
+                                <div class="form-group">
+                                    <label for="loginEmail">Email address</label>
+                                    <input type="email" class="form-control" id="loginEmail" placeholder="Enter email">
+                                </div>
+                                <div class="form-group">
+                                    <label for="loginPassword">Password</label>
+                                    <input type="password" class="form-control" id="loginPassword" placeholder="Password">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Login</button>
+                            </form>
+                        </div>
+                        <div class="tab-pane fade" id="signup" role="tabpanel" aria-labelledby="signup-tab">
+                            <form id= "signup-form">
+                                <div class="form-group">
+                                    <label for="signupName">UserName</label>
+                                    <input type="text" class="form-control" id="signupName" placeholder="Your Name">
+                                </div>
+                                <div class="form-group">
+                                    <label for="signupEmail">Email address</label>
+                                    <input type="email" class="form-control" id="signupEmail" placeholder="Enter email">
+                                </div>
+                                <div class="form-group">
+                                    <label for="signupPassword">Password</label>
+                                    <input type="password" class="form-control" id="signupPassword" placeholder="Password">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Sign-up</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const jwtToken = localStorage.getItem('jwtToken');
+document.getElementById('login-form').addEventListener('submit', function (event) {
+    event.preventDefault();
+
+    const username = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    //const email = document.getElementById('email').value;
+     const data = {
+        'username': username,
+        'password': password,
+        
+    };
+    console.log(data)
+
+    fetch("http://127.0.0.1:8000/login/", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+           // 'Authorization': `Bearer ${jwtToken}`,
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data) {
+            // Store the new JWT token (if provided) in localStorage
+            alert("h");
+            if(data.access_token) {
+                localStorage.setItem('jwtToken', data.token);
+            }
+            // Handle successful login
+            console.log('Login successful. JWT token:', data.access_token);
+            window.location.href = "{% url  'profile' %}";
+            alert("login");
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("error");
+    });
+});
+
+</script>
+<script>
+document.getElementById('signup-form').addEventListener('submit', function (event) {
+    event.preventDefault();
+
+    const email = document.getElementById('signupEmail').value;
+    const password = document.getElementById('signupPassword').value;
+    const username = document.getElementById('signupName').value;
+     const data = {
+        'username': username,
+        password: password,
+        'email': email
+        
+    };
+    console.log(data)
+
+    fetch('{% url "register" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data && data.token) {
+            // Registration successful, store the token
+            localStorage.setItem('jwtToken', data.token);
+            alert("successful");
+            console.log('Registration successful. JWT token:', data.token);
+        } else if (data && data.error) {
+            // Registration failed, handle the error
+            console.error('Registration error:', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("error");
+    });
+});
+
+</script>
+{% endblock container %}
