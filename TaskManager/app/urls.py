@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.urls import path
 from .views import *
-from knox import views as knox_views
+from django.contrib.auth.views import LogoutView
+
 
 urlpatterns = [
     
@@ -14,13 +15,8 @@ urlpatterns = [
     path('profile', profile, name = 'profile' ),
     
 
-    # path('register/', register_user.as_view(), name='register'),
     path('register/', signup, name='register'),
-    # path('register/', RegistrationAPI.as_view(), name='register'),
-    # path('login/', user_login.as_view(), name='login'),
     path('login/',  LoginView.as_view(), name='login'),
-    # path('login/',  login_view, name='login'),
     
-    path('logout/', CustomLogoutView.as_view(), name='logout'),
-    path('logout-all/', CustomLogoutView.as_view(), name='logout_all'),
+    path('logout/',  LogoutView.as_view(), name='logout'),
 ]

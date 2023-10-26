@@ -83,14 +83,14 @@ document.getElementById('login-form').addEventListener('submit', function (event
     .then(data => {
         if (data) {
             // Store the new JWT token (if provided) in localStorage
-            alert("h");
+            
             if(data.access_token) {
                 localStorage.setItem('jwtToken', data.token);
             }
             // Handle successful login
             console.log('Login successful. JWT token:', data.access_token);
             window.location.href = "{% url  'profile' %}";
-            alert("login");
+            
         }
     })
     .catch(error => {
@@ -127,7 +127,7 @@ document.getElementById('signup-form').addEventListener('submit', function (even
         if (data && data.token) {
             // Registration successful, store the token
             localStorage.setItem('jwtToken', data.token);
-            alert("successful");
+            alert("signup-successful");
             console.log('Registration successful. JWT token:', data.token);
         } else if (data && data.error) {
             // Registration failed, handle the error

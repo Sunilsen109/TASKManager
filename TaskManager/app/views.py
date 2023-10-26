@@ -1,48 +1,43 @@
 from django.shortcuts import render,redirect,get_object_or_404
-from django.contrib.auth import login,authenticate
+from django.contrib.auth import login, logout
 from rest_framework.views import APIView
-from rest_framework_jwt.views import ObtainJSONWebToken
 from rest_framework import status
-from django.contrib.auth import get_user_model
 from knox.views import LogoutView
-
-
-
-from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .serializers import UserSerializer
-from knox.models import AuthToken
-from knox.views import LoginView as KnoxLoginView
-from rest_framework import permissions
-from rest_framework.authtoken.serializers import AuthTokenSerializer 
-
-from rest_framework.authtoken.models import Token
-from django.contrib.auth import authenticate
-from django.core.exceptions import ObjectDoesNotExist
 from .models import *
-from .serializers import *
+from django.contrib.auth.views import LogoutView
+from django.contrib.auth.hashers import check_password
+
+
 from .forms import *
 from django.http import JsonResponse
 from rest_framework_jwt.views import obtain_jwt_token
-from django.http import HttpRequest
-
-
-
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework_jwt.settings import api_settings
+from rest_framework.decorators import api_view
 from rest_framework_jwt.views import obtain_jwt_token
-from django.contrib.auth.models import User
-from .serializers import UserSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth.decorators import login_required
+
+
 
 
 # Create your views here.
+
+
+
+
+
+
+
+
+
+
 def home(request):
     
     return render(request, 'home.html')
 
+@login_required(login_url='/')
 def task(request):
     if (request.user.is_superuser):
         task = Task.objects.all()
@@ -50,6 +45,8 @@ def task(request):
         task = Task.objects.filter(user = request.user)
 
     return render(request, 'task.html', {'task':task})
+
+@login_required(login_url='/')
 def add_task(request):
     form = TaskForm()
     if request.method == "POST":
@@ -60,7 +57,7 @@ def add_task(request):
 
     return render(request, 'add_task.html', {'form':form})
 
-
+@login_required(login_url='/')
 def update_task(request,id):
     item = get_object_or_404(Task, pk=id)
     
@@ -76,7 +73,7 @@ def update_task(request,id):
 
     return render(request, 'update.html', {'form': form})
 
-
+@login_required(login_url='/')
 def delete_task(request,id):
     
     task = get_object_or_404(Task, pk=id)
@@ -86,7 +83,7 @@ def delete_task(request,id):
 
 
 
-
+@login_required(login_url='/')
 def profile(request):
     return render(request, 'profile.html')
 
@@ -95,12 +92,7 @@ class CustomLogoutView(LogoutView):
 
 
 
-# views.py
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
-from rest_framework_jwt.settings import api_settings
-from django.contrib.auth.models import User
+
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
@@ -114,7 +106,7 @@ def signup(request):
     username = data.get('username')
     password = data.get('password')
     email = data.get('email')
-    print(username , email, password, "<-----")
+    
     
     if not username or not password:
         return Response({'error': 'Please provide both username and password.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -131,24 +123,22 @@ def signup(request):
 
 
 
-from django.contrib.auth import authenticate
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework_simplejwt.tokens import RefreshToken
 
 class LoginView(APIView):
     def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
-        print(username , password , "kkkkkkkkkkkkkkkkkkkk")
+        
         # user = authenticate(username=username, password=password)
         try : 
             user = CustomUser.objects.filter(email = username).first()
         except Exception as e:
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-
         if user:
+            check_pass = check_password(password, user.password)
+        else :
+            return redirect('home')
+        if check_pass:
             login(request , user)
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
@@ -156,3 +146,13 @@ class LoginView(APIView):
             return Response({'access_token': access_token}, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+@login_required(login_url='/')
+def log_out(request):
+    try:
+        logout(request)
+        return render(request, 'home.html')   
+    except Exception as E:
+        print(E)
+        return redirect('home')

@@ -162,3 +162,5 @@ JWT_ALGORITHM = 'HS256',
 
 TIME_ZONE = 'Asia/Kolkata'
 USE_TZ = True
+# settings.py
+LOGOUT_REDIRECT_URL = 'home'
